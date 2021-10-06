@@ -1,0 +1,8 @@
+//GET STATS
+curl -H "Authorization: Basic YWRtaW46c2VjcmV0" http://localhost:3000/stats -i
+
+//POST AS USER
+curl -d '{"from": "user", "to": "admin" , "message":"this is a message"}' -H "Content-Type: application/json" -H "Authorization: Basic dXNlcjpzZWNyZXQ=" -X POST http://localhost:3000/message -i
+
+//POST AS ADMIN
+curl -d '{"from": "admin", "to": "user" , "message":"this is a message"}' -H "Content-Type: application/json" -H "Authorization: Basic dXNlcjpzZWNyZXQ=" -X POST http://localhost:3000/message -i
