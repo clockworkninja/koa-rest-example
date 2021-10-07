@@ -69,6 +69,46 @@ const saveMessage = function ({message, from, to}) {
 	log.end();
 }
 
+router
+	.get('/stats', async (ctx, next) => {
+		if (ctx.session.logged && ctx.session.admin) {
+			ctx.body = getStats();
+			await next();
+		} else {
+			ctx.throw(403, 'Forbidden');
+		}
+	})
+	.post('/message', async (ctx, next) => {
+		
+		if (ctx.session.logged) {
+			saveMessage(ctx.request.body);
+			ctx.status = 201;	
+		} else {
+			ctx.throw(401, 'Access Denied');
+		}
+	})
+	.post('/login', async (ctx, next) => {
+		if (!ctx.request.body.username || !ctx.request.body.password) {
+			ctx.throw(400, "Missing Username and Password");
+		}
+		var {username, password} = ctx.request.body;
+		var isAdministrator = isAdmin({name: username, pass:password});
+		const success = await login(username, password);
+		if (success) {
+			ctx.session.logged = true;
+			ctx.session.username = username;
+			ctx.session.admin = isAdministrator;
+			ctx.session.save();
+			ctx.status = 200;
+		} else {
+			ctx.throw(401, 'Access Denied')
+		}
+	})
+	.get('/logout', async (ctx, next) => {
+		ctx.session = null;
+		ctx.status = 200;
+	});
+
 app.use(async (ctx, next) => {
 	try {
 		await next();
@@ -82,56 +122,9 @@ app.use(async (ctx, next) => {
 	}
 });
 
-app.use(session({useCookie: false}, app));
-app.use(bodyParser());
-
-router
-	.get('/stats', async (ctx) => {
-		if (ctx.session.logged && ctx.session.admin) {
-			ctx.status = 200;
-			ctx.body = getStats();
-		} else {
-			ctx.throw(403, 'Forbidden');
-		}
-	})
-	.post('/message', async (ctx) => {
-		if (ctx.session.logged) {
-			saveMessage(ctx.request.body);
-			ctx.status = 201;
-		} else {
-			ctx.throw(401, 'Access Denied');
-		}
-	})
-	.post('/login', async (ctx) => {
-		if (!ctx.request.body.username || !ctx.request.body.password) {
-			ctx.throw(400, "Missing Username and Password");
-		}
-		var {username, password} = ctx.request.body;
-		var isAdministrator = isAdmin({name: username, pass:password});
-		const success = await login(username, password);
-		if (success) {
-			
-			ctx.session.logged = true;
-			ctx.session.username = username;
-			ctx.session.admin = isAdministrator;
-			ctx.session.save();
-			ctx.status = 200;
-			ctx.body = "WELCOME " + username;
-		} else {
-			ctx.throw(401, 'Access Denied')
-		}
-
-	})
-	.get('/logout', (ctx) => {
-		ctx.session.logged = false;
-		ctx.session.username = undefined;
-		ctx.session.admin = false;
-		ctx.session.save();
-		ctx.status = 200;
-	}
-);
-
 app
+	.use(session(app))
+	.use(bodyParser())
 	.use(router.routes())
 	.use(router.allowedMethods());
 

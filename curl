@@ -1,16 +1,17 @@
 //LOGIN USER
-curl -d '{"username": "user", "password": "secret"}' -H "Content-Type: application/json"  -X POST http://localhost:3000/login -i
+curl -d '{"username": "user", "password": "secret"}' -H "Content-Type: application/json" -X POST http://localhost:3000/login -c /tmp/cookies -b /tmp/cookies "http://localhost:3000" -i
 
 //LOGIN ADMIN
-curl -d '{"username": "admin", "password": "secret"}' -H "Content-Type: application/json"  -X POST http://localhost:3000/login -i 
-
-//POST MESSAGE
-curl -d '{"from": "user", "to": "admin" , "message":"this is a message"}' -H "Content-Type: application/json" -X POST http://localhost:3000/message -i -H "KoaToken: <TOKEN_HERE>"
-
-//GET STATS
-curl http://localhost:3000/stats -i -H "KoaToken: <TOKEN_HERE>"
-
+curl -d '{"username": "admin", "password": "secret"}' -H "Content-Type: application/json"  -X POST http://localhost:3000/login -i -b /tmp/cookies -c /tmp/cookies "http://localhost:3000"
 
 //LOGOUT
-curl http://localhost:3000/logout -i -H "KoaToken: <TOKEN_HERE>"
+curl http://localhost:3000/logout -i -b /tmp/cookies "http://localhost:3000"
 
+//STATS
+curl http://localhost:3000/stats -i -b /tmp/cookies "http://localhost:3000" 
+
+//MESSAGE
+curl -d '{"from": "user", "to": "admin" , "message":"this is a message"}' -H "Content-Type: application/json" -X POST http://localhost:3000/message -i -b /tmp/cookies "http://localhost:3000"
+
+//LOGOUT
+curl http://localhost:3000/logout -i --cookie /tmp/cookies "http://localhost:3000" 
